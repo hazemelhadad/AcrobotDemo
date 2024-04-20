@@ -54,7 +54,9 @@ app.post("/login", async (req, res) => {
 });
 
 
-
+app.get("/home",(req,res)=>{
+  res.send("welcome ")
+})
 
 
 
