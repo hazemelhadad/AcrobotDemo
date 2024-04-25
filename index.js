@@ -25,20 +25,21 @@ db.once("open", function () {
 
 app.post("/register", async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const newUser = new User({ email, password });
+    const { name,email, password } = req.body;
+    const newUser = new User({ name,email, password });
     await newUser.save();
-    res.status(201).json({ message: "User registered successfully" });
+    res.status(201).json({ message: "User registered successfully"});
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
+
 // Login endpoint
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+name");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -46,8 +47,10 @@ app.post("/login", async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
-    const token = jwt.sign({ id: user._id }, "secret_key", { expiresIn: "1h" });
-    res.json({ token });
+    const token = jwt.sign({ id: user._id, name: user.name }, "secret_key", {
+      expiresIn: "1h",
+    });
+    res.json({ token, name: user.name });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
