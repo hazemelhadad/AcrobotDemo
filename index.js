@@ -28,9 +28,9 @@ app.post("/register", async (req, res) => {
     const { email, password } = req.body;
     const newUser = new User({ email, password });
     await newUser.save();
-    res.status(201).send("User registered");
+    res.status(201)
   } catch (error) {
-    res.status(500).send(error.message);
+    res.status(500)
   }
 });
 
@@ -40,11 +40,11 @@ app.post("/login", async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).send("User not found");
+      return res.status(404)
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).send("Invalid credentials");
+      return res.status(400)
     }
     const token = jwt.sign({ id: user._id }, "secret_key", { expiresIn: "1h" });
     res.json({ token });
@@ -59,18 +59,34 @@ app.get("/home",(req,res)=>{
 })
 
 
+//form
+app.post("/submit-form", (req, res) => {
+  const responses = req.body;
+  const totalQuestions = Object.keys(responses).length;
+  let positiveResponses = 0;
+
+  // Calculate the number of 'yes' answers
+  for (const key in responses) {
+    if (responses[key] === "yes") {
+      positiveResponses++;
+    }
+  }
+
+  // Calculate percentage of 'yes' answers
+  const percentageYes = (positiveResponses / totalQuestions) * 100;
+
+  // Determine if the percentage is 70% or more
+  if (percentageYes >= 70) {
+    res.status(200).send({ message: "He is injured", injuryStatus: true });
+  } else {
+    res.status(200).send({ message: "He isn't injured", injuryStatus: false });
+  }
+});
 
 
 
 app.listen(3001, () => {
   console.log("Server is running on http://localhost:3001");
-});
-
-
-
-
-
-
-
+})
 
 
