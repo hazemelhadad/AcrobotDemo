@@ -4,8 +4,6 @@ const User = require("./User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
-
-
 const app = express();
 app.use(express.json()); // Middleware to parse JSON
 
@@ -25,15 +23,16 @@ db.once("open", function () {
 
 app.post("/register", async (req, res) => {
   try {
-    const { name,email, password } = req.body;
-    const newUser = new User({ name,email, password });
+    const { name, email, password, mobile } = req.body; // Include mobile in the destructuring
+    const newUser = new User({ name, email, password, mobile }); // Pass mobile to the User model
     await newUser.save();
-    res.status(201).json({ message: "User registered successfully",userId:newUser.id});
+    res
+      .status(201)
+      .json({ message: "User registered successfully", userId: newUser.id });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
-
 
 // Login endpoint
 app.post("/login", async (req, res) => {
@@ -50,43 +49,32 @@ app.post("/login", async (req, res) => {
     const token = jwt.sign({ id: user._id, name: user.name }, "secret_key", {
       expiresIn: "1h",
     });
-    res.json({ token, name: user.name , userId: user._id});
+    res.json({ token, name: user.name, userId: user._id });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
+app.get("/home", (req, res) => {
+  res.send("welcome ");
+});
 
-app.get("/home",(req,res)=>{
-  res.send("welcome ")
-})
-
-
-//form
+// Form submission endpoint
 app.post("/submit-form", (req, res) => {
   const responses = req.body;
   const totalQuestions = Object.keys(responses).length;
   let positiveResponses = 0;
 
-  // Calculate the number of 'yes' answers
   for (const key in responses) {
     if (responses[key] === "yes") {
       positiveResponses++;
     }
   }
 
-  // Calculate percentage of 'yes' answers
   const percentageYes = (positiveResponses / totalQuestions) * 100;
-    res.status(200).send({ percentage: percentageYes });
-
-  // Determine if the percentage is 70% or more
-  // if (percentageYes >= 70) {
-  //   res.status(200).send({ message: "He is injured", injuryStatus: true });
-  // } else {
-  //   res.status(200).send({ message: "He isn't injured", injuryStatus: false });
-  // }
+  res.status(200).send({ percentage: percentageYes });
 });
-/////////////////////////////////////////
+
 // Profile View Endpoint
 app.get("/profile/:userId", async (req, res) => {
   try {
@@ -102,29 +90,25 @@ app.get("/profile/:userId", async (req, res) => {
 
 // Profile Update Endpoint
 app.put("/profile/:userId", async (req, res) => {
-  const { name, password } = req.body;
+  const { name, password, mobile } = req.body;
   try {
     const user = await User.findById(req.params.userId);
     if (!user) {
       return res.status(404).send("User not found");
     }
     user.name = name || user.name;
+    user.mobile = mobile || user.mobile;
+
     if (password) {
       user.password = await bcrypt.hash(password, 10);
     }
     await user.save();
-    res.status(200).json({message:"Profile updated successfully"});
+    res.status(200).json({ message: "Profile updated successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-
-
-
-
 app.listen(3001, () => {
   console.log("Server is running on http://localhost:3001");
-})
-
-
+});
